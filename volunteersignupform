@@ -1,0 +1,92 @@
+function getOrganizerEmailSSId() {
+  return "XXXXXXXS";
+}
+
+
+
+function getOrganizerNames() {
+  var SHEETNAME = "Organizer";
+  var FIRSTDATAROW = 2;
+  var NAMECOLNUM = 1;
+  var ONLYARRAYELEMENT = 0;
+  
+  var nameList = [];
+  
+  var ss = SpreadsheetApp.openById(getOrganizerEmailSSId());
+  var ssSheet = ss.getSheetByName(SHEETNAME);
+  var ssRange = ssSheet.getRange(FIRSTDATAROW, NAMECOLNUM, ssSheet.getLastRow()-1);
+  var ssValues = ssRange.getValues();
+  
+  for (var i = 0; i < ssValues.length; i++) {
+    nameList.push(ssValues[i][ONLYARRAYELEMENT]);
+  }
+  
+  return nameList;
+}
+
+
+
+// error if no entries in list
+function getOrganizerEmails() {
+  var SHEETNAME = "Organizer";
+  var FIRSTDATAROW = 2;
+  var EMAILCOLNUM = 2;
+  var ONLYARRAYELEMENT = 0;
+  
+  var emailList = [];
+  
+  var ss = SpreadsheetApp.openById(getOrganizerEmailSSId());
+  var ssSheet = ss.getSheetByName(SHEETNAME);
+  var ssRange = ssSheet.getRange(FIRSTDATAROW, EMAILCOLNUM, ssSheet.getLastRow()-1);
+  var ssValues = ssRange.getValues();
+  
+  for (var i = 0; i < ssValues.length; i++) {
+    emailList.push(ssValues[i][ONLYARRAYELEMENT]);
+  }
+  
+  return emailList;
+}
+
+
+
+function onSubmit(e) {
+  var NAMEITEMRESPONSETITLE = "First Name";
+  var EMAILITEMRESPONSETITLE = "Email Address";
+  
+  var formResponse = e.response;
+  var itemResponses = formResponse.getItemResponses();
+  
+  var recipient = getOrganizerEmails();
+  var volunteerEmail = "";
+  
+  var subject = "Volunteer Signup Notification";
+  
+  var organizerNames = getOrganizerNames();
+  var body = "Hi "; 
+  for (var i = 0; i < organizerNames.length; i++) {
+    if ((organizerNames.length > 1) && (i == (organizerNames.length-1))) {
+      body += "& ";
+    }
+    body += organizerNames[i];
+    if ((organizerNames.length > 1) && (i < (organizerNames.length-1))) {
+      body += ", ";
+    }
+  }
+  body += ",\n\n\t";
+  body += "Here is notification of another person who would like to volunteer:\n\n";
+  
+  for (var i = 0; i < itemResponses.length; i++) {
+    var itemResponse = itemResponses[i];
+    body += itemResponse.getItem().getTitle() + ":\t" + itemResponse.getResponse() + "\n\n";
+    
+    if (itemResponse.getItem().getTitle() == NAMEITEMRESPONSETITLE) {
+      subject += ": " + itemResponse.getResponse();
+    }
+          
+    if (itemResponse.getItem().getTitle() == EMAILITEMRESPONSETITLE) {
+      volunteerEmail = itemResponse.getResponse();
+    }
+  }
+  
+  MailApp.sendEmail(recipient, subject, body, {cc: volunteerEmail});
+}
